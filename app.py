@@ -45,8 +45,9 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             googleRequestJson = json.loads(googleRequest)
             ESPparameters = {}
             command = googleRequestJson['request']['intent']['slots']
+           
             if 'value' in command['question'].keys():
-                    ESPparameters['query'] = '?'
+                    ESPparameters['query'] = '!?'
             else:
                 ESPparameters['query'] = 'cmd'
 
@@ -56,6 +57,7 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
                 ESPparameters['state'] = command['state']['value']
 
             ESPparameters['instance'] = command['instance']['value']
+            
             # {"instance": "1", "state": "open", "query":"?"}
             # {"instance": "both", "state": "close", "query":"cmd"}
 
@@ -64,8 +66,14 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             if self.rwebsocket== None:
                 print("Device is not connected!")
                 return
+
             #await self.rwebsocket.send(json.dumps(googleRequestJson))
-            await self.rwebsocket.send(json.dumps(ESPparameters))
+
+            #await self.rwebsocket.send(json.dumps(ESPparameters))
+
+            #Verificar a string de destino
+            await self.rwebsocket.send(json.dumps(command))
+
             #wait for response and send it back to Alexa as is
             self.rddata = await self.rwebsocket.recv()
 
@@ -100,6 +108,7 @@ async def ws_handler(websocket, path):
 
 port = int(os.getenv('PORT', 80))#5687
 start_server = websockets.serve(ws_handler, '', port, klass=HttpWSSProtocol)
+
 # logger.info('Listening on port %d', port)
 
 asyncio.get_event_loop().run_until_complete(start_server)
